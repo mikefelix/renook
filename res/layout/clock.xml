@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@android:color/white"
+              android:id="@+id/screen"
+        >
+    <TextView
+            android:id="@+id/hour"
+            android:layout_width="wrap_content"
+            android:layout_marginLeft="90dp"
+            android:layout_marginTop="57dp"
+            android:layout_height="wrap_content"
+            android:textSize="300sp"
+            android:textAlignment="textEnd"
+            android:background="@android:color/white"
+            android:typeface="serif"
+            android:layout_alignParentTop="true"
+            />
+    <TextView
+            android:id="@+id/minutes"
+            android:layout_marginTop="90dp"
+            android:layout_marginBottom="90dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/hour"
+            android:textSize="200sp"
+            android:textAlignment="center"
+            android:background="@android:color/white"
+            android:typeface="serif"
+            android:layout_alignParentTop="true"
+            />
+    <TextView
+            android:id="@+id/date"
+            android:layout_below="@id/hour"
+            android:layout_width="fill_parent"
+            android:layout_marginLeft="420dp"
+            android:layout_height="wrap_content"
+            android:textSize="50sp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            />
+</RelativeLayout>
+<!-- was 550 margin-left and 60sp without temp ^^^
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:id="@+id/screen"
+        >
+    <TextView
+            android:id="@+id/quote"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="50sp"
+            android:layout_marginLeft="60dp"
+            android:layout_marginRight="60dp"
+            android:layout_marginTop="40dp"
+            />
+    <TextView
+            android:id="@+id/byline"
+            android:layout_width="match_parent"
+            android:layout_height="20dip"
+            android:textSize="30sp"
+            android:layout_marginLeft="60dp"
+            android:layout_marginRight="60dp"
+            android:layout_marginBottom="5dp"
+            />
+</LinearLayout>
+-->
+

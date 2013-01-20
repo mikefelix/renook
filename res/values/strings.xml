@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">renook</string>
+    <string name="html">
+    <![CDATA[
+    <html>
+     <head></head>
+     <body style="margin-top:90px;margin-bottom:20px;margin-right:60px;margin-left:60px;height:700px;color:black;background-color:white;">
+     <p style="font-size:@qsize@em;font-family:serif;text-align:justify;color:black;background-color:white;text-align:@just@;">@quote@</p>
+     <p style="font-size:@bsize@em;text-align:right;color:black;background-color:white;"> - @byline@</p>
+     </body>
+    </html>
+    ]]>
+    </string>
+</resources>

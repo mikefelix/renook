@@ -24,8 +24,11 @@ public class ClockActivity extends Activity {
     private DateFormat hourFormat = new SimpleDateFormat("h");
     private DateFormat paddedHourFormat = new SimpleDateFormat(" h");
     private DateFormat minuteFormat = new SimpleDateFormat(":mm");
-    private DateFormat dateFormat = new SimpleDateFormat("MMM d");
+//    private DateFormat dateFormat = new SimpleDateFormat("EEE, MMM d");
+    private DateFormat dateFormat = new SimpleDateFormat("EEE, 12/d");
     private PowerManager.WakeLock wakeLock;
+    private int num = 0;
+    private String temp;
 
     /**
      * Called when the activity is first created.
@@ -88,6 +91,12 @@ public class ClockActivity extends Activity {
         TextView date = (TextView) findViewById(R.id.date);
         Date dateTime = new Date();
 
+        if (num == 0)
+            temp = getTemp();
+
+        // Get the temp every 10 minutes
+        num = (num + 1) % 10;
+
         String hourText = hourFormat.format(dateTime);
         if (hourText.length() == 1)
             hourText = " " + hourText;
@@ -95,7 +104,7 @@ public class ClockActivity extends Activity {
         hour.setText(hourText);
         minutes.setText(minuteFormat.format(dateTime));
 //        date.setText(dateFormat.format(dateTime) + " / " + getTemp());
-        date.setText(dateFormat.format(dateTime) + "  ·  " + getTemp());
+        date.setText(dateFormat.format(dateTime) + "  ·  " + temp);
     }
 
     @Override protected void onDestroy() {

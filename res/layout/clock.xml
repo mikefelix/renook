@@ -35,7 +35,7 @@
             android:id="@+id/date"
             android:layout_below="@id/hour"
             android:layout_width="fill_parent"
-            android:layout_marginLeft="420dp"
+            android:layout_marginLeft="380dp"
             android:layout_height="wrap_content"
             android:textSize="50sp"
             android:layout_alignParentBottom="true"

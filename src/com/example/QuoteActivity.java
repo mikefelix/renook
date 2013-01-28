@@ -43,10 +43,11 @@ public class QuoteActivity extends Activity {
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "renook");
         wakeLock.acquire();
 
-        setupWebView();
-        showWebQuote();
-        timer = new MyTimer();
-        timer.start();
+        setupMainView();
+//        setupWebView();
+//        showWebQuote();
+//        timer = new MyTimer();
+//        timer.start();
     }
 
     @Override protected void onDestroy() {
@@ -64,8 +65,10 @@ public class QuoteActivity extends Activity {
         quote.setBackgroundColor(android.R.color.white);
         byline.setBackgroundColor(android.R.color.white);
 
-        quote.setText(quotes[quoteNum].text);
-        byline.setText(quotes[quoteNum].byline);
+//        quote.setText(quotes[quoteNum].text);
+//        byline.setText(quotes[quoteNum].byline);
+        quote.setText("________________________________");
+        byline.setText("\n\n\n\n\n\n\n\n\n\n\n\n_____________________________________________");
     }
 
     private void setupWebView() {

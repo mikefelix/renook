@@ -6,67 +6,128 @@
               android:background="@android:color/white"
               android:id="@+id/screen"
         >
-    <TextView
-            android:id="@+id/hour"
-            android:layout_width="wrap_content"
-            android:layout_marginLeft="90dp"
-            android:layout_marginTop="57dp"
-            android:layout_height="wrap_content"
-            android:textSize="300sp"
-            android:textAlignment="textEnd"
-            android:background="@android:color/white"
-            android:typeface="serif"
-            android:layout_alignParentTop="true"
-            />
-    <TextView
-            android:id="@+id/minutes"
-            android:layout_marginTop="90dp"
-            android:layout_marginBottom="90dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/hour"
-            android:textSize="200sp"
-            android:textAlignment="center"
-            android:background="@android:color/white"
-            android:typeface="serif"
-            android:layout_alignParentTop="true"
-            />
-    <TextView
-            android:id="@+id/date"
-            android:layout_below="@id/hour"
+
+    <RelativeLayout
+            android:orientation="vertical"
             android:layout_width="fill_parent"
-            android:layout_marginLeft="380dp"
             android:layout_height="wrap_content"
-            android:textSize="50sp"
+            android:layout_marginTop="50dp"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="50dp"
+            android:background="@android:color/white"
+            android:id="@+id/above"
+            >
+        <TextView
+                android:id="@+id/hour"
+                android:layout_width="380dp"
+                android:layout_height="wrap_content"
+                android:textSize="300sp"
+                android:textAlignment="gravity"
+                android:gravity="top|right"
+                android:background="@android:color/white"
+                android:typeface="serif"
+                android:layout_alignParentTop="true"
+                android:visibility="gone"
+                />
+        <TextView
+                android:id="@+id/shortHour"
+                android:layout_width="310dp"
+                android:layout_height="wrap_content"
+                android:textSize="300sp"
+                android:textAlignment="gravity"
+                android:gravity="top|right"
+                android:typeface="serif"
+                android:layout_toRightOf="@id/hour"
+                android:layout_alignParentTop="true"
+                />
+        <TextView
+                android:id="@+id/minutes"
+                android:layout_width="330dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:layout_toRightOf="@id/shortHour"
+                android:textAlignment="gravity"
+                android:gravity="top|left"
+                android:textSize="200sp"
+                android:background="@android:color/white"
+                android:typeface="serif"
+                android:layout_alignParentTop="true"
+                />
+    </RelativeLayout>
+
+    <RelativeLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/above"
+            android:layout_marginBottom="60dp"
+            android:layout_marginLeft="65dp"
+            android:layout_marginRight="60dp"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            />
+            android:background="@android:color/white"
+            android:id="@+id/below"
+            >
+
+        <TextView
+                android:id="@+id/temp"
+                android:layout_below="@id/hour"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="60sp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                />
+
+        <ImageView
+                android:id="@+id/icon"
+                android:layout_below="@id/hour"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_toRightOf="@id/temp"
+                android:contentDescription="icon"
+                />
+
+        <ImageView
+                android:id="@+id/icon2"
+                android:layout_below="@id/hour"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="5dp"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_alignParentBottom="true"
+                android:layout_toRightOf="@id/icon"
+                android:contentDescription="icon"
+                />
+
+        <ImageView
+                android:id="@+id/icon3"
+                android:layout_below="@id/hour"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="5dp"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_alignParentBottom="true"
+                android:layout_toRightOf="@id/icon2"
+                android:contentDescription="icon"
+                />
+
+
+        <TextView
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/temp"
+                android:textSize="50sp"
+                android:gravity="bottom|right"
+                android:textAlignment="gravity"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                />
+
+    </RelativeLayout>
+
 </RelativeLayout>
-<!-- was 550 margin-left and 60sp without temp ^^^
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:id="@+id/screen"
-        >
-    <TextView
-            android:id="@+id/quote"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textSize="50sp"
-            android:layout_marginLeft="60dp"
-            android:layout_marginRight="60dp"
-            android:layout_marginTop="40dp"
-            />
-    <TextView
-            android:id="@+id/byline"
-            android:layout_width="match_parent"
-            android:layout_height="20dip"
-            android:textSize="30sp"
-            android:layout_marginLeft="60dp"
-            android:layout_marginRight="60dp"
-            android:layout_marginBottom="5dp"
-            />
-</LinearLayout>
--->
 

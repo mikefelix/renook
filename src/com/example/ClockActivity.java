@@ -6,15 +6,21 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +32,7 @@ public class ClockActivity extends Activity {
     private DateFormat hour24Format = new SimpleDateFormat("H");
     private DateFormat paddedHourFormat = new SimpleDateFormat(" h");
     private DateFormat minuteFormat = new SimpleDateFormat(":mm");
+    private DateFormat minuteFormatNoColon = new SimpleDateFormat(" mm");
 //    private DateFormat dateFormat = new SimpleDateFormat("EEE, MMM d");
     private DateFormat dateFormat = new SimpleDateFormat("EEE M/d");
     private PowerManager.WakeLock wakeLock;
@@ -41,7 +48,9 @@ public class ClockActivity extends Activity {
     private Pattern tempPattern = Pattern.compile("temp=\"([^\"]*)\"");
     private Pattern highPattern = Pattern.compile("high=\"([^\"]*)\"");
     private Pattern lowPattern = Pattern.compile("low=\"([^\"]*)\"");
+    private int lastWeatherReqNum = 0;
 
+    boolean continuing = true;
     /**
      * Called when the activity is first created.
      */
@@ -53,10 +62,38 @@ public class ClockActivity extends Activity {
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "renook");
         wakeLock.acquire();
 
+        Window win = getWindow();
+        win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+
         setViews();
 
         timer = new MyTimer();
         timer.start();
+    }
+
+    @Override
+    protected void onResume() {
+        wakeLock.acquire();
+        super.onResume();
+    }
+
+    @Override
+    protected void onRestart() {
+        wakeLock.acquire();
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        wakeLock.release();
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        wakeLock.release();
+        super.onStop();
     }
 
     private void setViews(){
@@ -69,10 +106,19 @@ public class ClockActivity extends Activity {
         ImageView icon2 = (ImageView) findViewById(R.id.icon2);
         ImageView icon3 = (ImageView) findViewById(R.id.icon3);
 
-        Date dateTime = new Date();
+        final Date dateTime = new Date();
 
-        if (getWeatherCounter == 0)
-            refreshWeather(Integer.parseInt(hour24Format.format(dateTime)));
+//        currTemp = "--";
+//        currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
+
+        if (getWeatherCounter == 0) {
+            lastWeatherReqNum++;
+            new Thread(){
+                public void run() {
+                    refreshWeather(lastWeatherReqNum, Integer.parseInt(hour24Format.format(dateTime)));
+                }
+            }.start();
+        }
 
         // Get the temp every 10 minutes
         getWeatherCounter = (getWeatherCounter + 1) % 60;
@@ -91,31 +137,59 @@ public class ClockActivity extends Activity {
         icon3.setImageResource(foreIcon2);
 
         if (refreshCounter == 0){
+            Log.i("CLOCK", "Flashing screen.");
             startActivity(new Intent(this, FlashActivity.class));
         }
 
         refreshCounter = (refreshCounter + 1) % 360;
+//        Log.i("CLOCK", "Refreshing time " + refreshCounter);
+
+        if (!continuing)
+            finish();
     }
 
-    private void refreshWeather(int hourNum) {
-        URL url;
+    private void refreshWeather(int reqNum, int hourNum) {
+        URL url = null;
         BufferedReader reader = null;
         String line;
         StringBuilder sb = new StringBuilder();
 
+        Log.i("CLOCK", "Refreshing weather with number " + reqNum + " at " + currentTime());
+
         try {
             url = new URL("http://weather.yahooapis.com/forecastrss?w=12794144");
-            reader = new BufferedReader(new InputStreamReader(url.openStream()));
+            URLConnection connection = url.openConnection();
+            connection.setConnectTimeout(20000);
+            for (int i = 0; i < 5; i++) {
+                try {
+                    InputStream is = connection.getInputStream();
+                    InputStreamReader in = new InputStreamReader(is);
+                    reader = new BufferedReader(in);
+                    break;
+                }
+                catch (SocketTimeoutException e) {
+                    //continue;
+                }
+            }
+
+            if (reader == null)
+                throw new IOException("Read timed out after five tries.");
 
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }
         }
         catch (MalformedURLException mue) {
-             mue.printStackTrace();
+            Log.e("CLOCK", "Malformed URL: " + url);
+            currTemp = "!!";
+            currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
+            return;
         }
         catch (IOException ioe) {
-             ioe.printStackTrace();
+            Log.e("CLOCK", "I/O Exception in weather thread " + reqNum + " at " + currentTime() + ": " + ioe.getMessage());
+            currTemp = currTemp.replaceAll("[^0-9]", "?");
+            currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
+            return;
         }
         finally {
             try {
@@ -127,16 +201,20 @@ public class ClockActivity extends Activity {
             }
         }
 
-        String str = sb.toString();
+        if (lastWeatherReqNum != reqNum) {
+            Log.e("CLOCK", "Request " + reqNum + " attempting processing but current req is " + lastWeatherReqNum);
+            return;
+        }
 
-        currTemp = "--";
-        currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
+        String str = sb.toString();
 
         Matcher currMatcher = currWeatherPattern.matcher(str);
         if (currMatcher.find()){
             Matcher tempMatcher = tempPattern.matcher(currMatcher.group(1));
-            if (tempMatcher.find())
+            if (tempMatcher.find()) {
+                Log.i("CLOCK", "Setting temp to " + tempMatcher.group(1) + " at " + currentTime() + " in thread " + reqNum);
                 currTemp = tempMatcher.group(1) + "°";
+            }
 
             Matcher codeMatcher = codePattern.matcher(currMatcher.group(1));
             if (codeMatcher.find())
@@ -161,6 +239,14 @@ public class ClockActivity extends Activity {
             }
 
         }
+        else {
+            currTemp = "--";
+            currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
+        }
+    }
+
+    private String currentTime() {
+        return timeFormat.format(Calendar.getInstance().getTime());
     }
 
     private int getIcon(String num, int hour) {

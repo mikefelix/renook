@@ -12,6 +12,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -22,42 +23,35 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ClockActivity extends Activity {
+    public static final String CURR_URL = "http://api.wunderground.com/api/4ff057a10c9613a4/conditions/q/UT/Murray.json";
+    public static final String FORE_URL = "http://api.wunderground.com/api/4ff057a10c9613a4/forecast/q/UT/Murray.json";
+
     private MyTimer timer;
     private DateFormat timeFormat = new SimpleDateFormat("h:mm");
     private DateFormat hourFormat = new SimpleDateFormat("h");
     private DateFormat hour24Format = new SimpleDateFormat("H");
-    private DateFormat paddedHourFormat = new SimpleDateFormat(" h");
     private DateFormat minuteFormat = new SimpleDateFormat(":mm");
-    private DateFormat minuteFormatNoColon = new SimpleDateFormat(" mm");
-//    private DateFormat dateFormat = new SimpleDateFormat("EEE, MMM d");
-    private DateFormat dateFormat = new SimpleDateFormat("EEE M/d");
+    private DateFormat dateFormat = new SimpleDateFormat("MMM d");
     private PowerManager.WakeLock wakeLock;
     private int getWeatherCounter = 0;
+    private int getForecastCounter = 0;
     private int refreshCounter = 0;
-    private String currTemp;
+    private String currTemp = "108°", highTemp1 = "108°", lowTemp1 = "108°", highTemp2 = "108°", lowTemp2 = "108°";
+    private String cast1, cast2;
+    private String cond1 = "conditions", cond2 = "conditions";
     private int currIcon = R.drawable.clear;
     private int foreIcon1 = R.drawable.clear;
     private int foreIcon2 = R.drawable.clear;
-    private Pattern currWeatherPattern = Pattern.compile("<yweather:condition ([^>]*)/>");
-    private Pattern forecastWeatherPattern = Pattern.compile("<yweather:forecast ([^>]*)/>");
-    private Pattern codePattern = Pattern.compile("code=\"([^\"]*)\"");
-    private Pattern tempPattern = Pattern.compile("temp=\"([^\"]*)\"");
-    private Pattern highPattern = Pattern.compile("high=\"([^\"]*)\"");
-    private Pattern lowPattern = Pattern.compile("low=\"([^\"]*)\"");
     private int lastWeatherReqNum = 0;
-
+    private int lastForecastReqNum = 0;
     boolean continuing = true;
-    /**
-     * Called when the activity is first created.
-     */
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.clock);
+        setContentView(R.layout.clockp);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "renook");
         wakeLock.acquire();
@@ -97,19 +91,24 @@ public class ClockActivity extends Activity {
     }
 
     private void setViews(){
-        TextView hour = (TextView) findViewById(R.id.hour);
-        TextView shortHour = (TextView) findViewById(R.id.shortHour);
-        TextView minutes = (TextView) findViewById(R.id.minutes);
-        TextView date = (TextView) findViewById(R.id.date);
-        TextView temp = (TextView) findViewById(R.id.temp);
-        ImageView icon = (ImageView) findViewById(R.id.icon);
-        ImageView icon2 = (ImageView) findViewById(R.id.icon2);
-        ImageView icon3 = (ImageView) findViewById(R.id.icon3);
+        TextView hourView = (TextView) findViewById(R.id.hour);
+        TextView shortHourView = (TextView) findViewById(R.id.shortHour);
+        TextView minutesView = (TextView) findViewById(R.id.minutes);
+        TextView dateView = (TextView) findViewById(R.id.date);
+        TextView tempView = (TextView) findViewById(R.id.temp);
+        TextView high1View = (TextView) findViewById(R.id.high1);
+        TextView low1View = (TextView) findViewById(R.id.low1);
+        TextView high2View = (TextView) findViewById(R.id.high2);
+        TextView low2View = (TextView) findViewById(R.id.low2);
+        TextView cast1View = (TextView) findViewById(R.id.cast1);
+        TextView cast2View = (TextView) findViewById(R.id.cast2);
+//        TextView cond1View = (TextView) findViewById(R.id.cond1);
+//        TextView cond2View = (TextView) findViewById(R.id.cond2);
+        ImageView currIconView = (ImageView) findViewById(R.id.currIcon);
+        ImageView foreIcon1View = (ImageView) findViewById(R.id.foreIcon1);
+        ImageView foreIcon2View = (ImageView) findViewById(R.id.foreIcon2);
 
         final Date dateTime = new Date();
-
-//        currTemp = "--";
-//        currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
 
         if (getWeatherCounter == 0) {
             lastWeatherReqNum++;
@@ -120,44 +119,151 @@ public class ClockActivity extends Activity {
             }.start();
         }
 
-        // Get the temp every 10 minutes
-        getWeatherCounter = (getWeatherCounter + 1) % 60;
+        if (getForecastCounter == 0) {
+            lastForecastReqNum++;
+            new Thread(){
+                public void run() {
+                    refreshForecast(lastForecastReqNum, Integer.parseInt(hour24Format.format(dateTime)));
+                }
+            }.start();
+        }
+
+        // Get the temp every 3 minutes
+        getWeatherCounter = (getWeatherCounter + 1) % 18;
+        getForecastCounter = (getForecastCounter + 1) % 360;
 
         String hourText = hourFormat.format(dateTime);
-        shortHour.setVisibility(hourText.length() == 2 ? View.GONE : View.VISIBLE);
-        hour.setVisibility(hourText.length() == 1 ? View.GONE : View.VISIBLE);
+        shortHourView.setVisibility(hourText.length() == 2 ? View.GONE : View.VISIBLE);
+        hourView.setVisibility(hourText.length() == 1 ? View.GONE : View.VISIBLE);
 
-        hour.setText(hourText);
-        shortHour.setText(hourText);
-        minutes.setText(minuteFormat.format(dateTime));
-        date.setText(dateFormat.format(dateTime));
-        temp.setText(currTemp);
-        icon.setImageResource(currIcon);
-        icon2.setImageResource(foreIcon1);
-        icon3.setImageResource(foreIcon2);
+        hourView.setText(hourText);
+        shortHourView.setText(hourText);
+        minutesView.setText(minuteFormat.format(dateTime));
+        dateView.setText(dateFormat.format(dateTime));
+        tempView.setText(currTemp);
+        high1View.setText(highTemp1);
+        low1View.setText(lowTemp1);
+        high2View.setText(highTemp2);
+        low2View.setText(lowTemp2);
+        cast1View.setText(cast1);
+        cast2View.setText(cast2);
+//        cond1View.setText(cond1);
+//        cond2View.setText(cond2);
+
+        currIconView.setImageResource(currIcon);
+        foreIcon1View.setImageResource(foreIcon1);
+        foreIcon2View.setImageResource(foreIcon2);
 
         if (refreshCounter == 0){
-            Log.i("CLOCK", "Flashing screen.");
             startActivity(new Intent(this, FlashActivity.class));
         }
 
         refreshCounter = (refreshCounter + 1) % 360;
-//        Log.i("CLOCK", "Refreshing time " + refreshCounter);
-
         if (!continuing)
             finish();
     }
 
+    private String shortenForecast(String cast) {
+        cast = cast.replaceAll("with", "w/")
+                .replaceAll("(followed by|will become)", "then")
+                .replaceAll("(near|around) ", "~")
+                .replaceAll("(\\d+) to (\\d+) mph", "$1-$2 mph");
+        cast = cast.length() > 50 ? cast.replaceAll("\\..*$", ".") : cast;
+
+        if (cast.length() > 50)
+            cast = cast.replaceAll("(Low|high|low|High) ~?(\\d+[Ff]?)\\. ?", "");
+
+        if (cast.length() > 50)
+            cast = cast.substring(0, 48) + "...";
+
+        return cast;
+    }
+
+    private String shortenDay(String date) {
+        return date
+                .replace("Sat", "Sa")
+                .replace("Sun", "Su")
+                .replace("Mon", "M")
+                .replace("Tue", "T")
+                .replace("Wed", "W")
+                .replace("Thu", "Th")
+                .replace("Fri", "F");
+    }
+
+    private void refreshForecast(int reqNum, int hourNum) {
+        Log.i("CLOCK", "Refreshing forecast with number " + reqNum + " at " + currentTime());
+
+        if (lastWeatherReqNum != reqNum) {
+            Log.e("CLOCK", "Request " + reqNum + " attempting processing but current req is " + lastWeatherReqNum);
+            return;
+        }
+
+        String text = getUrl(FORE_URL);
+        if (text == null)
+            return;
+
+        Gson gson = new Gson();
+        Forecast forecast = gson.fromJson(text, Forecast.class);
+
+        Forecast.SimpleForecast f = forecast.forecast.simpleforecast;
+        Forecast.TextForecast t = forecast.forecast.txt_forecast;
+
+        Forecast.SimpleForecastDay period1 = f.forecastday[1];
+        Forecast.SimpleForecastDay period2 = f.forecastday[2];
+        Forecast.TextForecastDay textPeriod1 = t.forecastday[1];
+        Forecast.TextForecastDay textPeriod2 = t.forecastday[2];
+
+        String title1 = textPeriod1.title.toUpperCase();
+        String title2 = textPeriod2.title.toUpperCase();
+
+        ((TextView)findViewById(R.id.period1)).setText(title1);
+        ((TextView)findViewById(R.id.period2)).setText(title2);
+
+        lowTemp1 = period1.low.fahrenheit + "°";
+        highTemp1 = period1.high.fahrenheit + "°";
+
+        lowTemp2 = period2.low.fahrenheit + "°";
+        highTemp2 = period2.high.fahrenheit + "°";
+
+        cast1 = shortenForecast(textPeriod1.fcttext);
+        cast2 = shortenForecast(textPeriod2.fcttext);
+
+        foreIcon1 = getIcon(period1.icon, title1.contains("NIGHT"));
+        foreIcon2 = getIcon(period2.icon, title2.contains("NIGHT"));
+    }
+
+    private boolean isNight(int hour){
+        return hour < 8 || hour > 19;
+    }
+
     private void refreshWeather(int reqNum, int hourNum) {
+        Log.i("CLOCK", "Refreshing weather with number " + reqNum + " at " + currentTime());
+
+        if (lastWeatherReqNum != reqNum) {
+            Log.e("CLOCK", "Request " + reqNum + " attempting processing but current req is " + lastWeatherReqNum);
+            return;
+        }
+
+        String text = getUrl(CURR_URL);
+        if (text == null)
+            return;
+
+        Gson gson = new Gson();
+        Conditions conditions = gson.fromJson(text, Conditions.class);
+
+        int rounded = Math.round(Float.parseFloat(conditions.current_observation.temp_f));
+        currTemp = rounded + "°";
+        currIcon = getIcon(conditions.current_observation.icon, isNight(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)));
+    }
+
+    private String getUrl(String urlStr){
         URL url = null;
         BufferedReader reader = null;
         String line;
         StringBuilder sb = new StringBuilder();
 
-        Log.i("CLOCK", "Refreshing weather with number " + reqNum + " at " + currentTime());
-
         try {
-            url = new URL("http://weather.yahooapis.com/forecastrss?w=12794144");
+            url = new URL(urlStr);
             URLConnection connection = url.openConnection();
             connection.setConnectTimeout(20000);
             for (int i = 0; i < 5; i++) {
@@ -169,6 +275,7 @@ public class ClockActivity extends Activity {
                 }
                 catch (SocketTimeoutException e) {
                     //continue;
+//                    Log.e("CLOCK", "Connection failed in " + reqNum + ", retrying.");
                 }
             }
 
@@ -182,14 +289,14 @@ public class ClockActivity extends Activity {
         catch (MalformedURLException mue) {
             Log.e("CLOCK", "Malformed URL: " + url);
             currTemp = "!!";
-            currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
-            return;
+            currIcon = foreIcon1 = foreIcon2 = R.drawable.blank;
+            return null;
         }
         catch (IOException ioe) {
-            Log.e("CLOCK", "I/O Exception in weather thread " + reqNum + " at " + currentTime() + ": " + ioe.getMessage());
+//            Log.e("CLOCK", "I/O Exception in weather thread " + reqNum + " at " + currentTime() + ": " + ioe.getMessage());
             currTemp = currTemp.replaceAll("[^0-9]", "?");
-            currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
-            return;
+            currIcon = foreIcon1 = foreIcon2 = R.drawable.blank;
+            return null;
         }
         finally {
             try {
@@ -201,142 +308,52 @@ public class ClockActivity extends Activity {
             }
         }
 
-        if (lastWeatherReqNum != reqNum) {
-            Log.e("CLOCK", "Request " + reqNum + " attempting processing but current req is " + lastWeatherReqNum);
-            return;
-        }
-
-        String str = sb.toString();
-
-        Matcher currMatcher = currWeatherPattern.matcher(str);
-        if (currMatcher.find()){
-            Matcher tempMatcher = tempPattern.matcher(currMatcher.group(1));
-            if (tempMatcher.find()) {
-                Log.i("CLOCK", "Setting temp to " + tempMatcher.group(1) + " at " + currentTime() + " in thread " + reqNum);
-                currTemp = tempMatcher.group(1) + "°";
-            }
-
-            Matcher codeMatcher = codePattern.matcher(currMatcher.group(1));
-            if (codeMatcher.find())
-                currIcon = getIcon(codeMatcher.group(1), hourNum);
-
-            Matcher forecastMatcher = forecastWeatherPattern.matcher(str);
-            if (forecastMatcher.find()){
-                codeMatcher = codePattern.matcher(forecastMatcher.group(1));
-                if (codeMatcher.find())
-                    foreIcon1 = getIcon(codeMatcher.group(1), (hourNum + 12) % 24);
-            }
-
-            if (forecastMatcher.find()){
-                codeMatcher = codePattern.matcher(forecastMatcher.group(1));
-                if (codeMatcher.find())
-                    foreIcon2 = getIcon(codeMatcher.group(1), hourNum);
-            }
-
-            if (hourNum > 17){
-                foreIcon1 = foreIcon2;
-                foreIcon2 = R.drawable.clear;
-            }
-
-        }
-        else {
-            currTemp = "--";
-            currIcon = foreIcon1 = foreIcon2 = R.drawable.clear;
-        }
+        return sb.toString();
     }
 
     private String currentTime() {
         return timeFormat.format(Calendar.getInstance().getTime());
     }
 
-    private int getIcon(String num, int hour) {
-        switch (Integer.parseInt(num)){
-            case 3:	 // severe thunderstorms
-            case 4:	 // thunderstorms
-            case 45: //	thundershowers
-                return R.drawable.tstorm;
-
-            case 37: //	isolated thunderstorms
-            case 47: //	isolated thundershowers
-            case 38: //	scattered thunderstorms
-            case 39: //	scattered thunderstorms
-                return R.drawable.tstorm1;
-
-            case 14: //	light snow showers
-            case 42: //	scattered snow showers
-            case 13: //	snow flurries
-                return R.drawable.lightsnow;
-
-            case 5:	 // mixed rain and snow
-            case 7:	 // mixed snow and sleet
-            case 16: //	snow
-            case 41: //	heavy snow
-            case 43: //	heavy snow
-            case 46: //	snow showers
-            case 15: //	blowing snow
-                return R.drawable.snow;
-
-            case 17: //	hail
-            case 35: //	mixed rain and hail
-                return R.drawable.hail;
-
-            case 8:	 // freezing drizzle
-            case 9:	 // drizzle
-            case 40: //	scattered showers
-                return R.drawable.drizzle;
-
-            case 6:	 // mixed rain and sleet
-            case 10: //	freezing rain
-            case 11: //	showers
-            case 12: //	showers
-            case 18: //	sleet
-                return R.drawable.rain;
-
-            case 19: //	dust
-            case 21: //	haze
-            case 22: //	smoky
-                return R.drawable.hazy;
-
-            case 0:	 // tornado
-            case 1:	 // tropical storm
-            case 2:	 // hurricane
-            case 23: //	blustery
-            case 24: //	windy
-                return R.drawable.windy;
-
-            case 25: //	cold
-                return R.drawable.snowflake;
-            case 36: //	hot
-                return R.drawable.hot;
-
-            case 20: //	foggy
-                return hour < 6 || hour > 20 ? R.drawable.fogmoon : R.drawable.fogsun;
-
-            case 29: //	partly cloudy (night)
-                return R.drawable.cloudmoon;
-
-            case 30: //	partly cloudy (day)
-                return R.drawable.cloudsun;
-
-            case 26: //	cloudy
-            case 44: //	partly cloudy
-                return hour < 6 || hour > 20 ? R.drawable.cloudmoon : R.drawable.cloudsun;
-
-            case 27: //	mostly cloudy (night)
-            case 28: //	mostly cloudy (day)
-                return R.drawable.cloudy;
-
-            case 31: //	clear (night)
-            case 33: //	fair (night)
-                return R.drawable.moon;
-
-            case 32: //	sunny
-            case 34: //	fair (day)
-                return R.drawable.sun;
-
-            default:
-                return R.drawable.na;
-        }
+    private int getIcon(String name, boolean night) {
+        if ("chanceflurries".equals(name))
+            return night ? R.drawable.nt_chanceflurries : R.drawable.chanceflurries;
+        else if ("chancerain".equals(name)) 
+            return night ? R.drawable.nt_chancerain : R.drawable.chancerain;
+        else if ("chancesleet".equals(name)) 
+            return night ? R.drawable.nt_chancesleet : R.drawable.chancesleet;
+        else if ("chancesnow".equals(name)) 
+            return night ? R.drawable.nt_chancesnow : R.drawable.chancesnow;
+        else if ("chancetstorms".equals(name)) 
+            return night ? R.drawable.nt_chancetstorms : R.drawable.chancetstorms;
+        else if ("cloudy".equals(name)) 
+            return night ? R.drawable.nt_cloudy : R.drawable.cloudy;
+        else if ("flurries".equals(name)) 
+            return night ? R.drawable.nt_flurries : R.drawable.flurries;
+        else if ("fog".equals(name)) 
+            return night ? R.drawable.nt_fog : R.drawable.fog;
+        else if ("hazy".equals(name)) 
+            return night ? R.drawable.nt_hazy : R.drawable.hazy;
+        else if ("rain".equals(name)) 
+            return night ? R.drawable.nt_rain : R.drawable.rain;
+        else if ("snow".equals(name)) 
+            return night ? R.drawable.nt_snow : R.drawable.snow;
+        else if ("sunny".equals(name)) 
+            return night ? R.drawable.nt_sunny : R.drawable.sunny;
+        else if ("sleet".equals(name)) 
+            return night ? R.drawable.nt_sleet : R.drawable.sleet;
+        else if ("tstorms".equals(name)) 
+            return night ? R.drawable.nt_tstorms : R.drawable.tstorms;
+        else if ("mostlycloudy".equals(name)) 
+            return night ? R.drawable.nt_mostlycloudy : R.drawable.mostlycloudy;
+        else if ("partlycloudy".equals(name)) 
+            return night ? R.drawable.nt_partlycloudy : R.drawable.partlycloudy;
+        else if ("mostlysunny".equals(name)) 
+            return night ? R.drawable.nt_mostlysunny : R.drawable.mostlysunny;
+        else if ("partlysunny".equals(name)) 
+            return night ? R.drawable.nt_partlysunny : R.drawable.partlysunny;
+        else 
+            return night ? R.drawable.nt_clear : R.drawable.clear;
     }
 
     @Override protected void onDestroy() {

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools" android:orientation="horizontal"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:color="@android:color/black"
+              android:background="@android:color/white"
+              android:id="@+id/screen"
+              tools:context=".ClockActivity">
+
+    <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="-20dp"
+            android:id="@+id/timeV"
+            android:gravity="center"
+            >
+        <TextView
+                android:id="@+id/hour"
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
+                android:textSize="180sp"
+                android:gravity="top|right"
+                android:text="12"
+                android:typeface="serif"
+                android:layout_alignParentTop="true"
+                android:visibility="gone"
+                />
+        <TextView
+                android:id="@+id/shortHour"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:textSize="180sp"
+                android:gravity="top|right"
+                android:typeface="serif"
+                android:text="3"
+                android:layout_toRightOf="@id/hour"
+                android:layout_alignParentTop="true"
+                />
+        <TextView
+                android:id="@+id/minutes"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_toRightOf="@id/shortHour"
+                android:text=":45"
+                android:gravity="top|left"
+                android:textSize="150sp"
+                android:typeface="serif"
+                android:layout_alignParentTop="true"
+                />
+    </RelativeLayout>
+
+    <RelativeLayout
+            android:id="@+id/dateV"
+            android:layout_below="@id/timeV"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            >
+        <TextView
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="90dp"
+                android:layout_marginTop="5dp"
+                android:gravity="left"
+                android:textSize="60sp"
+                android:layout_alignParentTop="true"
+                android:text="Sat 6/14"
+                />
+
+        <ImageView
+                android:id="@+id/currIcon"
+                android:src="@drawable/clear"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginLeft="30dp"
+                android:gravity="center"
+                android:layout_toRightOf="@id/date"
+                android:contentDescription="icon"
+                />
+
+        <TextView
+                android:id="@+id/temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="60sp"
+                android:text="70"
+                android:gravity="right"
+                android:layout_marginRight="80dp"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@id/currIcon"
+                />
+    </RelativeLayout>
+
+    <RelativeLayout
+              android:id="@+id/period1V"
+              android:layout_below="@id/dateV"
+              android:layout_width="fill_parent"
+              android:layout_height="220dp"
+              android:gravity="center|center_vertical"
+              android:layout_marginTop="30dp"
+              android:layout_marginLeft="75dp"
+              android:layout_marginRight="60dp"
+              >
+
+        <TextView
+                android:id="@+id/period1"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_marginLeft="15dp"
+                android:gravity="left"
+                android:typeface="sans"
+                android:textSize="30sp"
+                android:text="TODAY"
+                />
+
+        <ImageView
+                android:src="@drawable/clear"
+                android:id="@+id/foreIcon1"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_below="@id/period1"
+                android:contentDescription="icon"
+                />
+
+        <RelativeLayout
+                   android:id="@+id/highLow1V"
+                   android:layout_marginLeft="10dp"
+                   android:layout_marginTop="5dp"
+                   android:layout_width="100dp"
+                   android:layout_height="160dp"
+                   android:layout_toRightOf="@id/foreIcon1"
+                   android:layout_below="@id/period1"
+                   >
+            <TextView
+                android:id="@+id/high1"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="94°"
+                android:textSize="40sp"
+                />
+
+
+            <TextView
+                android:id="@+id/low1"
+                android:layout_below="@id/high1"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="88°"
+                android:textSize="40sp"
+                />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/cast1"
+            android:layout_width="250dp"
+            android:layout_height="180dp"
+            android:layout_marginTop="50dp"
+            android:text="Colder tonight with a chance of showers."
+            android:typeface="serif"
+            android:textSize="30sp"
+            android:layout_toRightOf="@id/highLow1V"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+              android:id="@+id/period2V"
+              android:layout_below="@id/period1V"
+              android:layout_width="fill_parent"
+              android:layout_height="220dp"
+              android:gravity="center|center_vertical"
+              android:layout_marginTop="-15dp"
+              android:layout_marginLeft="75dp"
+              android:layout_marginRight="60dp"
+              >
+
+        <TextView
+                android:id="@+id/period2"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_marginLeft="15dp"
+                android:gravity="left"
+                android:typeface="sans"
+                android:textSize="30sp"
+                android:text="TOMORROW"
+                />
+
+        <ImageView
+                android:src="@drawable/clear"
+                android:id="@+id/foreIcon2"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_below="@id/period2"
+                android:contentDescription="icon"
+                />
+
+        <RelativeLayout
+                   android:id="@+id/highLow2V"
+                   android:layout_marginLeft="10dp"
+                   android:layout_marginTop="5dp"
+                   android:layout_width="100dp"
+                   android:layout_height="160dp"
+                   android:layout_toRightOf="@id/foreIcon2"
+                   android:layout_below="@id/period2"
+                   >
+
+            <TextView
+                android:id="@+id/high2"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="94°"
+                android:textSize="40sp"
+                />
+
+            <TextView
+                android:id="@+id/low2"
+                android:layout_below="@id/high2"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="88°"
+                android:textSize="40sp"
+                />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/cast2"
+            android:layout_width="250dp"
+            android:layout_height="180dp"
+            android:layout_marginTop="50dp"
+            android:text="Colder tonight with a chance of showers."
+            android:typeface="serif"
+            android:textSize="30sp"
+            android:layout_toRightOf="@id/highLow2V"
+            />
+
+    </RelativeLayout>
+
+
+
+</RelativeLayout>
+
+

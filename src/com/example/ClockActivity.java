@@ -33,19 +33,19 @@ public class ClockActivity extends Activity {
     private DateFormat hourFormat = new SimpleDateFormat("h");
     private DateFormat hour24Format = new SimpleDateFormat("H");
     private DateFormat minuteFormat = new SimpleDateFormat(":mm");
-    private DateFormat dateFormat = new SimpleDateFormat("MMM d");
+    private DateFormat dateFormat = new SimpleDateFormat("M/d");
     private PowerManager.WakeLock wakeLock;
     private int getWeatherCounter = 0;
-    private int getForecastCounter = 0;
+    private int lastForecastQuarter = -1;
     private int refreshCounter = 0;
     private String currTemp = "108°", highTemp1 = "108°", lowTemp1 = "108°", highTemp2 = "108°", lowTemp2 = "108°";
+    private String hum = "34%";
     private String cast1, cast2;
-    private String cond1 = "conditions", cond2 = "conditions";
+    private String title1 = "TODAY";
+    private String title2 = "TOMORROW";
     private int currIcon = R.drawable.clear;
     private int foreIcon1 = R.drawable.clear;
     private int foreIcon2 = R.drawable.clear;
-    private int lastWeatherReqNum = 0;
-    private int lastForecastReqNum = 0;
     boolean continuing = true;
 
     @Override
@@ -107,30 +107,35 @@ public class ClockActivity extends Activity {
         ImageView currIconView = (ImageView) findViewById(R.id.currIcon);
         ImageView foreIcon1View = (ImageView) findViewById(R.id.foreIcon1);
         ImageView foreIcon2View = (ImageView) findViewById(R.id.foreIcon2);
+        TextView title1View = (TextView) findViewById(R.id.period1);
+        TextView title2View = (TextView) findViewById(R.id.period2);
+        TextView humView = (TextView) findViewById(R.id.hum);
 
-        final Date dateTime = new Date();
+        Calendar cal = Calendar.getInstance();
+        final Date dateTime = cal.getTime();
 
         if (getWeatherCounter == 0) {
-            lastWeatherReqNum++;
             new Thread(){
                 public void run() {
-                    refreshWeather(lastWeatherReqNum, Integer.parseInt(hour24Format.format(dateTime)));
+                    refreshWeather();
                 }
             }.start();
         }
 
-        if (getForecastCounter == 0) {
-            lastForecastReqNum++;
+        int min = cal.get(Calendar.MINUTE);
+        int quarter = min / 15;
+//        Log.i("CLOCK", "Forecast: min is " + min + " so quarter is " + quarter + "; last: " + lastForecastQuarter);
+        if (lastForecastQuarter != quarter) {
+            lastForecastQuarter = quarter;
             new Thread(){
                 public void run() {
-                    refreshForecast(lastForecastReqNum, Integer.parseInt(hour24Format.format(dateTime)));
+                    refreshForecast();
                 }
             }.start();
         }
 
-        // Get the temp every 3 minutes
-        getWeatherCounter = (getWeatherCounter + 1) % 18;
-        getForecastCounter = (getForecastCounter + 1) % 360;
+        // Get the current conditions every 5 minutes and the forecast every fifteen.
+        getWeatherCounter = (getWeatherCounter + 1) % 30;
 
         String hourText = hourFormat.format(dateTime);
         shortHourView.setVisibility(hourText.length() == 2 ? View.GONE : View.VISIBLE);
@@ -147,8 +152,9 @@ public class ClockActivity extends Activity {
         low2View.setText(lowTemp2);
         cast1View.setText(cast1);
         cast2View.setText(cast2);
-//        cond1View.setText(cond1);
-//        cond2View.setText(cond2);
+        title1View.setText(title1);
+        title2View.setText(title2);
+        humView.setText(hum);
 
         currIconView.setImageResource(currIcon);
         foreIcon1View.setImageResource(foreIcon1);
@@ -164,16 +170,19 @@ public class ClockActivity extends Activity {
     }
 
     private String shortenForecast(String cast) {
+        int max = 60;
+
         cast = cast.replaceAll("with", "w/")
                 .replaceAll("(followed by|will become)", "then")
                 .replaceAll("(near|around) ", "~")
-                .replaceAll("(\\d+) to (\\d+) mph", "$1-$2 mph");
-        cast = cast.length() > 50 ? cast.replaceAll("\\..*$", ".") : cast;
+                .replaceAll("(\\d+) to (\\d+) mph", "$1-$2 mph")
+                .replaceAll("at (\\d+-\\d+ mph)", "$1");
+        cast = cast.length() > max ? cast.replaceAll("\\..*$", ".") : cast;
 
-        if (cast.length() > 50)
-            cast = cast.replaceAll("(Low|high|low|High) ~?(\\d+[Ff]?)\\. ?", "");
+        if (cast.length() > max)
+            cast = cast.replaceAll("(Low|high|low|High) (~|around |near )?(\\d+[Ff]?)\\. ?", "");
 
-        if (cast.length() > 50)
+        if (cast.length() > max)
             cast = cast.substring(0, 48) + "...";
 
         return cast;
@@ -190,14 +199,26 @@ public class ClockActivity extends Activity {
                 .replace("Fri", "F");
     }
 
-    private void refreshForecast(int reqNum, int hourNum) {
-        Log.i("CLOCK", "Refreshing forecast with number " + reqNum + " at " + currentTime());
+    private void showForecasts(String title1, String high1, String low1, String cond1, String cast1,
+                               String title2, String high2, String low2, String cond2, String cast2){
+        this.title1 = title1.toUpperCase();
+        this.title2 = title2.toUpperCase();
 
-        if (lastWeatherReqNum != reqNum) {
-            Log.e("CLOCK", "Request " + reqNum + " attempting processing but current req is " + lastWeatherReqNum);
-            return;
-        }
+        highTemp1 = this.title1.matches(".*NIGHT.*") ? " ↓" : high1;
+        lowTemp1 = this.title1.matches(".*NIGHT.*") ? low1 : " ↑";
 
+        highTemp2 = this.title2.matches(".*NIGHT.*") ? " ↓" : high2;
+        lowTemp2 = this.title2.matches(".*NIGHT.*") ? low2 : " ↑";
+
+        foreIcon1 = getIcon(cond1, false);
+        foreIcon2 = getIcon(cond2, true);
+
+        this.cast1 = shortenForecast(cast1);
+        this.cast2 = shortenForecast(cast2);
+    }
+
+    private void refreshForecast() {
+        Log.i("CLOCK", "Refreshing forecast at " + timeFormat.format(new Date()));
         String text = getUrl(FORE_URL);
         if (text == null)
             return;
@@ -205,44 +226,31 @@ public class ClockActivity extends Activity {
         Gson gson = new Gson();
         Forecast forecast = gson.fromJson(text, Forecast.class);
 
-        Forecast.SimpleForecast f = forecast.forecast.simpleforecast;
-        Forecast.TextForecast t = forecast.forecast.txt_forecast;
+        Forecast.SimpleForecast simple = forecast.forecast.simpleforecast;
+        Forecast.TextForecast textual = forecast.forecast.txt_forecast;
 
-        Forecast.SimpleForecastDay period1 = f.forecastday[1];
-        Forecast.SimpleForecastDay period2 = f.forecastday[2];
-        Forecast.TextForecastDay textPeriod1 = t.forecastday[1];
-        Forecast.TextForecastDay textPeriod2 = t.forecastday[2];
+        int hour = Calendar.getInstance().get(Calendar.HOUR);
+        if (hour < 14) { // show today and tonight
+            Forecast.SimpleForecastDay today = simple.forecastday[0];
+            Forecast.TextForecastDay todayText = textual.forecastday[0];
+            Forecast.TextForecastDay tonightText = textual.forecastday[1];
 
-        String title1 = textPeriod1.title.toUpperCase();
-        String title2 = textPeriod2.title.toUpperCase();
-
-        ((TextView)findViewById(R.id.period1)).setText(title1);
-        ((TextView)findViewById(R.id.period2)).setText(title2);
-
-        lowTemp1 = period1.low.fahrenheit + "°";
-        highTemp1 = period1.high.fahrenheit + "°";
-
-        lowTemp2 = period2.low.fahrenheit + "°";
-        highTemp2 = period2.high.fahrenheit + "°";
-
-        cast1 = shortenForecast(textPeriod1.fcttext);
-        cast2 = shortenForecast(textPeriod2.fcttext);
-
-        foreIcon1 = getIcon(period1.icon, title1.contains("NIGHT"));
-        foreIcon2 = getIcon(period2.icon, title2.contains("NIGHT"));
-    }
-
-    private boolean isNight(int hour){
-        return hour < 8 || hour > 19;
-    }
-
-    private void refreshWeather(int reqNum, int hourNum) {
-        Log.i("CLOCK", "Refreshing weather with number " + reqNum + " at " + currentTime());
-
-        if (lastWeatherReqNum != reqNum) {
-            Log.e("CLOCK", "Request " + reqNum + " attempting processing but current req is " + lastWeatherReqNum);
-            return;
+            showForecasts(todayText.title, today.high.fahrenheit, today.low.fahrenheit, todayText.icon, todayText.fcttext,
+                    tonightText.title, today.high.fahrenheit, today.low.fahrenheit, tonightText.icon, tonightText.fcttext);
         }
+        else { // show tonight and tomorrow
+            Forecast.SimpleForecastDay today = simple.forecastday[0];
+            Forecast.SimpleForecastDay tomorrow = simple.forecastday[1];
+            Forecast.TextForecastDay tonightText = textual.forecastday[1];
+            Forecast.TextForecastDay tomorrowText = textual.forecastday[2];
+
+            showForecasts(tonightText.title, today.high.fahrenheit, tomorrow.low.fahrenheit, tonightText.icon, tonightText.fcttext,
+                    tonightText.title, tomorrow.high.fahrenheit, tomorrow.low.fahrenheit, tomorrowText.icon, tomorrowText.fcttext);
+        }
+    }
+
+    private void refreshWeather() {
+        Log.i("CLOCK", "Refreshing current at " + timeFormat.format(new Date()));
 
         String text = getUrl(CURR_URL);
         if (text == null)
@@ -252,8 +260,14 @@ public class ClockActivity extends Activity {
         Conditions conditions = gson.fromJson(text, Conditions.class);
 
         int rounded = Math.round(Float.parseFloat(conditions.current_observation.temp_f));
-        currTemp = rounded + "°";
+        currTemp = rounded + (rounded >= 100 ? "°" : "°F");
         currIcon = getIcon(conditions.current_observation.icon, isNight(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)));
+
+        hum = conditions.current_observation.relative_humidity;
+    }
+
+    private boolean isNight(int hour){
+        return hour < 7 || hour > 19;
     }
 
     private String getUrl(String urlStr){

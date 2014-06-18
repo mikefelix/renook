@@ -30,7 +30,7 @@ public class Forecast {
         String conditions, icon;
         Precip qpf_allday, snow_allday;
         Wind avewind, maxwind;
-        String avehumidity, maxhumidity;
+        int avehumidity, maxhumidity;
     }
 
     public static class TextForecastDay {

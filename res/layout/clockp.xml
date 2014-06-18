@@ -76,7 +76,7 @@
                 android:src="@drawable/clear"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:layout_marginLeft="30dp"
+                android:layout_marginLeft="40dp"
                 android:gravity="center"
                 android:layout_toRightOf="@id/date"
                 android:contentDescription="icon"

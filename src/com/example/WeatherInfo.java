@@ -15,7 +15,7 @@ public class WeatherInfo {
         this.cond = cond;
         this.night = night;
         this.temp = temp;
-        this.hum = hum + "%";
+        this.hum = hum > 0 ? hum + "%" : "";
     }
 
     public String displayTemp(){

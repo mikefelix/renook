@@ -1,5 +1,9 @@
 package com.example;
 
+import android.util.Log;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,33 +33,56 @@ public class ForecastInfo extends WeatherInfo {
     public String getExtra(){
         Matcher m = chanceRainPattern.matcher(cast);
         if (m.find()){
-            return "☂" + m.group(3);
+            return ":" + m.group(4) + "%";
         }
 
         m = chanceSnowPattern.matcher(cast);
         if (m.find()){
-            return "☃" + m.group(3);
+            return ":" + m.group(3) + "%";
         }
 
         return hum + "%";
     }
 
+    @Contract("!null -> !null")
     private String shorten(String cast) {
-        int max = 60;
+        try {
+            int max = 65;
 
-        cast = cast.replaceAll("with", "w/")
-                .replaceAll("(followed by|will become)", "then")
-                .replaceAll("(near|around) ", "~")
-                .replaceAll("(\\d+) to (\\d+) mph", "$1-$2 mph")
-                .replaceAll("at (\\d+-\\d+ mph)", "$1");
-        cast = cast.length() > max ? cast.replaceAll("\\..*$", ".") : cast;
+            String shortCast = cast.replaceAll("with", "w/")
+                    .replaceAll("((will be )?followed by|will become|becoming|(will give|giving) way to)", "then")
+                    .replaceAll("(near|around|approaching) ", "~")
+                    .replaceAll("afternoon", "PM")
+                    .replaceAll("morning", "AM")
+                    .replaceAll("cloudiness", "clouds")
+                    .replaceAll("possible\\.?", "poss.")
+                    .replaceAll("through(out)?", "thru")
+                    .replaceAll("(a |the )?possibility of", "possible")
+                    .replaceAll("(\\d+) to (\\d+) mph", "$1-$2 mph")
+                    .replaceAll("at (\\d+-\\d+ mph)", "$1")
+                    .replaceAll("Thunderstorm", "Storm")
+                    .replaceAll("(shower or )?[Tt]hunderstorm", "storm")
+                    .replaceAll("(\\w+) in the (PM|AM|afternoon|evening|night|morning)", "$2 $1")
+                    .replaceAll(" and ", ", ")
+    //                .replaceAll("([Pp])artly", "$1tly")
+                    .replaceAll("([Ss])cattered", "$1catt.");
 
-        if (cast.length() > max)
-            cast = cast.replaceAll("(Low|high|low|High) (~|around |near )?(\\d+[Ff]?)\\. ?", "");
+            shortCast = shortCast.replaceAll("(Low|high|low|High) (~|around |near )?(\\d+[Ff]?)\\. ?", "");
 
-        if (cast.length() > max)
-            cast = cast.substring(0, 48) + "...";
+//        shortCast = shortCast.length() > max ? shortCast.replaceAll("\\..*$", ".") : shortCast;
+// Partly to mostly cloudy with scattered showers and thunderstorms in the afternoon. High 87F. Winds SSE at 10 to 15 mph. Chance of rain 40%.
+            while (shortCast.length() > max)
+                shortCast = shortCast.replaceFirst("\\. +[^.]+\\.$", ".");
 
-        return cast;
+//        if (shortCast.length() > max)
+//            shortCast = shortCast.substring(0, max - 3) + "...";
+
+            Log.i("CLOCK", "Turned forecast \"" + cast + "\" into \"" + shortCast + "\"");
+            return shortCast;
+        }
+        catch (Exception e) {
+            Log.e("CLOCK", "Exception while shortening forecast", e);
+            return cast;
+        }
     }
 }

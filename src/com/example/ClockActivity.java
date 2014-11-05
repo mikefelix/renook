@@ -1,10 +1,13 @@
 package com.example;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
@@ -35,10 +38,15 @@ public class ClockActivity extends Activity {
 
     private MyTimer timer;
     private PowerManager.WakeLock wakeLock;
-    private ForecastInfo forecast1 = new ForecastInfo("Starting...", 100, 40, "blank", "Starting...");
-    private ForecastInfo forecast2 = new ForecastInfo("Starting...", 100, 40, "blank", "Starting...");
-    private WeatherInfo current = new WeatherInfo("Starting...", 108, 58, false);
+    private ForecastInfo forecast1 = new ForecastInfo("Starting up...", 100, 40, "blank", "Starting up...");
+    private ForecastInfo forecast2 = new ForecastInfo("Starting up...", 100, 40, "blank", "Starting up...");
+    private WeatherInfo current = new WeatherInfo("Starting up...", 108, 58, false);
     private Date dateTime = new Date();
+
+    private ForecastInfo failedForecast = new ForecastInfo("Refresh failed", 100, 40, "blank", "Error retrieving forecast.");
+    private WeatherInfo failedCurrent = new WeatherInfo("Refresh failed", 0, 0, false);
+    private WeatherInfo failedTwiceCurrent = new WeatherInfo("Refresh failed", 0, 0, false);
+    private PendingIntent restartIntent;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -53,6 +61,25 @@ public class ClockActivity extends Activity {
         win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         refreshViews();
+
+        restartIntent = PendingIntent.getActivity(this.getBaseContext(), 0, new Intent(getIntent()), getIntent().getFlags());
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            public void uncaughtException(Thread thread, Throwable throwable) {
+                try {
+                    File logFile = new File(Environment.getExternalStorageDirectory(), "exception_log.txt");
+                    PrintWriter writer = new PrintWriter(new FileWriter(logFile));
+                    writer.write(throwable.getMessage());
+                    writer.write(throwable.toString());
+                }
+                catch (IOException e) {
+                }
+
+                AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 2000, restartIntent);
+                System.exit(2);
+            }
+        });
 
         timer = new MyTimer();
         timer.start();
@@ -114,7 +141,12 @@ public class ClockActivity extends Activity {
         shortHourView.setText(hourText);
         minutesView.setText(minuteFormat.format(dateTime));
         dateView.setText(dateFormat.format(dateTime));
-        tempView.setText(current.displayTemp());
+
+        if (current != failedCurrent) {
+            tempView.setText(current == failedTwiceCurrent ? "--" : current.displayTemp());
+            humView.setText(current == failedTwiceCurrent ? "--" : current.hum);
+        }
+
         temp1View.setText(forecast1.displayTemp());
         temp2View.setText(forecast2.displayTemp());
         extra1View.setText(forecast1.getExtra());
@@ -123,7 +155,6 @@ public class ClockActivity extends Activity {
         cast2View.setText(forecast2.cast);
         title1View.setText(forecast1.title.toUpperCase());
         title2View.setText(forecast2.title.toUpperCase());
-        humView.setText(current.hum);
 
         currIconView.setImageResource(current.getIcon());
         foreIcon1View.setImageResource(forecast1.getIcon());
@@ -133,8 +164,12 @@ public class ClockActivity extends Activity {
     private void refreshForecast() {
         Log.i("CLOCK", "Refreshing forecast at " + timeFormat.format(new Date()));
         String text = getUrl(FORE_URL);
-        if (text == null)
+        if (text == null || "".equals(text)) {
+            Log.e("CLOCK", "Returning early because no text received.");
+            forecast1 = failedForecast;
+            forecast2 = failedForecast;
             return;
+        }
 
         Gson gson = new Gson();
         Forecast forecast = gson.fromJson(text, Forecast.class);
@@ -160,8 +195,11 @@ public class ClockActivity extends Activity {
     private void refreshWeather() {
         Log.i("CLOCK", "Refreshing current at " + timeFormat.format(new Date()));
         String text = getUrl(CURR_URL);
-        if (text == null)
+        if (text == null || "".equals(text)) {
+            Log.e("CLOCK", "Returning early because no text received.");
+            current = (current == failedCurrent || current == failedTwiceCurrent) ? failedTwiceCurrent : failedCurrent;
             return;
+        }
 
         Gson gson = new Gson();
         Conditions conditions = gson.fromJson(text, Conditions.class);
@@ -213,7 +251,7 @@ public class ClockActivity extends Activity {
             return null;
         }
         catch (IOException ioe) {
-//            Log.e("CLOCK", "I/O Exception in weather thread " + reqNum + " at " + currentTime() + ": " + ioe.getMessage());
+            Log.e("CLOCK", "I/O Exception in request: " + ioe.getMessage());
 //            currTemp = currTemp.replaceAll("[^0-9]", "?");
 //            currIcon = foreIcon1 = foreIcon2 = R.drawable.blank;
             return null;
@@ -251,7 +289,12 @@ public class ClockActivity extends Activity {
             if (getWeatherCounter == 0) {
                 new Thread(){
                     public void run() {
-                        refreshWeather();
+                        try {
+                            refreshWeather();
+                        }
+                        catch (Exception e) {
+                            Log.e("CLOCK", "Error refreshing current: " + e.getClass().getName() + "; " + e.getMessage());
+                        }
                     }
                 }.start();
             }
@@ -265,7 +308,12 @@ public class ClockActivity extends Activity {
                 lastForecastQuarter = quarter;
                 new Thread(){
                     public void run() {
-                        refreshForecast();
+                        try {
+                            refreshForecast();
+                        }
+                        catch (Exception e) {
+                            Log.e("CLOCK", "Error refreshing forecast: " + e.getClass().getName() + "; " + e.getMessage());
+                        }
                     }
                 }.start();
             }

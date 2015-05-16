@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
@@ -67,10 +66,16 @@ public class ClockActivity extends Activity {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread thread, Throwable throwable) {
                 try {
-                    File logFile = new File(Environment.getExternalStorageDirectory(), "exception_log.txt");
+                    File logFile = new File("/media/exception_log.txt");
                     PrintWriter writer = new PrintWriter(new FileWriter(logFile));
                     writer.write(throwable.getMessage());
                     writer.write(throwable.toString());
+                    for (StackTraceElement frame : throwable.getStackTrace()){
+                        Log.e("CLOCK", "Caught exception: " + frame.getClassName() + "." + frame.getMethodName() + ":" + frame.getLineNumber());
+                        writer.write(frame.getClassName() + "." + frame.getMethodName() + ":" + frame.getLineNumber());
+                    }
+
+                    writer.close();
                 }
                 catch (IOException e) {
                 }
@@ -121,9 +126,9 @@ public class ClockActivity extends Activity {
         TextView dateView = (TextView) findViewById(R.id.date);
         TextView tempView = (TextView) findViewById(R.id.temp);
         TextView temp1View = (TextView) findViewById(R.id.high1);
-        TextView extra1View = (TextView) findViewById(R.id.low1);
+//        TextView extra1View = (TextView) findViewById(R.id.low1);
         TextView temp2View = (TextView) findViewById(R.id.high2);
-        TextView extra2View = (TextView) findViewById(R.id.low2);
+//        TextView extra2View = (TextView) findViewById(R.id.low2);
         TextView cast1View = (TextView) findViewById(R.id.cast1);
         TextView cast2View = (TextView) findViewById(R.id.cast2);
         ImageView currIconView = (ImageView) findViewById(R.id.currIcon);
@@ -149,8 +154,8 @@ public class ClockActivity extends Activity {
 
         temp1View.setText(forecast1.displayTemp());
         temp2View.setText(forecast2.displayTemp());
-        extra1View.setText(forecast1.getExtra());
-        extra2View.setText(forecast2.getExtra());
+//        extra1View.setText(forecast1.getExtra());
+//        extra2View.setText(forecast2.getExtra());
         cast1View.setText(forecast1.cast);
         cast2View.setText(forecast2.cast);
         title1View.setText(forecast1.title.toUpperCase());

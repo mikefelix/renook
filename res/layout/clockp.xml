@@ -136,8 +136,8 @@
                 android:id="@+id/foreIcon1"
                 android:layout_marginLeft="5dp"
                 android:layout_marginTop="5dp"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
                 android:layout_below="@id/period1"
                 android:contentDescription="icon"
                 />
@@ -148,8 +148,7 @@
                    android:layout_marginTop="5dp"
                    android:layout_width="100dp"
                    android:layout_height="160dp"
-                   android:layout_toRightOf="@id/foreIcon1"
-                   android:layout_below="@id/period1"
+                   android:layout_below="@id/foreIcon1"
                    >
             <TextView
                 android:id="@+id/high1"
@@ -160,26 +159,29 @@
                 />
 
 
+<!--
             <TextView
                 android:id="@+id/low1"
-                android:layout_below="@id/high1"
+                android:layout_toRightOf="@id/high1"
                 android:layout_width="100dp"
                 android:layout_height="50dp"
                 android:text="88°"
                 android:textSize="40sp"
                 />
+-->
 
         </RelativeLayout>
 
         <TextView
             android:id="@+id/cast1"
-            android:layout_width="250dp"
+            android:layout_width="325dp"
             android:layout_height="180dp"
             android:layout_marginTop="50dp"
+            android:layout_marginLeft="30dp"
             android:text="Colder tonight with a chance of showers."
             android:typeface="serif"
             android:textSize="30sp"
-            android:layout_toRightOf="@id/highLow1V"
+            android:layout_toRightOf="@id/foreIcon1"
             />
 
     </RelativeLayout>
@@ -190,7 +192,7 @@
               android:layout_width="fill_parent"
               android:layout_height="220dp"
               android:gravity="center|center_vertical"
-              android:layout_marginTop="-15dp"
+              android:layout_marginTop="-20dp"
               android:layout_marginLeft="75dp"
               android:layout_marginRight="60dp"
               >
@@ -203,7 +205,7 @@
                 android:gravity="left"
                 android:typeface="sans"
                 android:textSize="30sp"
-                android:text="TOMORROW"
+                android:text="TODAY"
                 />
 
         <ImageView
@@ -211,8 +213,8 @@
                 android:id="@+id/foreIcon2"
                 android:layout_marginLeft="5dp"
                 android:layout_marginTop="5dp"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
                 android:layout_below="@id/period2"
                 android:contentDescription="icon"
                 />
@@ -223,10 +225,8 @@
                    android:layout_marginTop="5dp"
                    android:layout_width="100dp"
                    android:layout_height="160dp"
-                   android:layout_toRightOf="@id/foreIcon2"
-                   android:layout_below="@id/period2"
+                   android:layout_below="@id/foreIcon2"
                    >
-
             <TextView
                 android:id="@+id/high2"
                 android:layout_width="100dp"
@@ -235,29 +235,34 @@
                 android:textSize="40sp"
                 />
 
+
+<!--
             <TextView
                 android:id="@+id/low2"
-                android:layout_below="@id/high2"
+                android:layout_toRightOf="@id/high2"
                 android:layout_width="100dp"
                 android:layout_height="50dp"
                 android:text="88°"
                 android:textSize="40sp"
                 />
+-->
 
         </RelativeLayout>
 
         <TextView
             android:id="@+id/cast2"
-            android:layout_width="250dp"
+            android:layout_width="325dp"
             android:layout_height="180dp"
             android:layout_marginTop="50dp"
+            android:layout_marginLeft="30dp"
             android:text="Colder tonight with a chance of showers."
             android:typeface="serif"
             android:textSize="30sp"
-            android:layout_toRightOf="@id/highLow2V"
+            android:layout_toRightOf="@id/foreIcon2"
             />
 
     </RelativeLayout>
+
 
 
 

@@ -49,23 +49,26 @@ public class ForecastInfo extends WeatherInfo {
         try {
             int max = 65;
 
-            String shortCast = cast.replaceAll("with", "w/")
+            String shortCast = cast
+//                    .replaceAll("with", "w/")
                     .replaceAll("((will be )?followed by|will become|becoming|(will give|giving) way to)", "then")
+                    .replaceAll(" (and|then|with) ", ", ")
                     .replaceAll("(near|around|approaching) ", "~")
                     .replaceAll("afternoon", "PM")
                     .replaceAll("morning", "AM")
+                    .replaceAll("overnight", "late")
                     .replaceAll("cloudiness", "clouds")
-                    .replaceAll("possible\\.?", "poss.")
                     .replaceAll("through(out)?", "thru")
                     .replaceAll("(a |the )?possibility of", "possible")
+//                    .replaceAll("possible\\.?", "poss.")
                     .replaceAll("(\\d+) to (\\d+) mph", "$1-$2 mph")
                     .replaceAll("at (\\d+-\\d+ mph)", "$1")
                     .replaceAll("Thunderstorm", "Storm")
                     .replaceAll("(shower or )?[Tt]hunderstorm", "storm")
                     .replaceAll("(\\w+) in the (PM|AM|afternoon|evening|night|morning)", "$2 $1")
-                    .replaceAll(" and ", ", ")
     //                .replaceAll("([Pp])artly", "$1tly")
-                    .replaceAll("([Ss])cattered", "$1catt.");
+                    .replaceAll("([Ss])cattered", "$1catt.")
+                    .replaceAll("\\.\\.", ".");
 
             shortCast = shortCast.replaceAll("(Low|high|low|High) (~|around |near )?(\\d+[Ff]?)\\. ?", "");
 
